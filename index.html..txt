@@ -2,97 +2,456 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Expense Tracker</title>
-  
-  <!-- Standalone Mobile App Meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Vehicle Expense Tracker</title>
+
+  <!-- PWA Standalone Setup -->
   <meta name="theme-color" content="#075E54">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Expense Tracker">
+  <meta name="apple-mobile-web-app-title" content="ExpenseTracker">
 
-  <!-- Embedded Web Manifest for Direct Standalone Mode -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Expense Tracker","short_name":"ExpenseTracker","start_url":".","display":"standalone","background_color":"#075E54","theme_color":"#075E54","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1995/1995574.png","sizes":"512x512","type":"image/png"}]}'>
+  <!-- Direct Embedded Manifest Data-URI -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Vehicle Expense Tracker","short_name":"ExpenseTracker","start_url":".","display":"standalone","background_color":"#075E54","theme_color":"#075E54","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1995/1995574.png","sizes":"512x512","type":"image/png"}]}'>
 
+  <!-- Client-Side Excel Export Engine -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #111b21; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
-    #app { width: 100%; max-width: 500px; height: 100%; background-color: #efeae2; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    :root {
+      --wa-teal: #075E54;
+      --wa-teal-light: #128C7E;
+      --wa-green: #25D366;
+      --wa-btn-green: #00a884;
+      --wa-chat-bg: #efeae2;
+      --wa-bubble-green: #d9fdd3;
+      --wa-text-primary: #111b21;
+      --wa-text-secondary: #667781;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0b141a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 500px;
+      height: 100dvh;
+      background-color: var(--wa-chat-bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
 
     /* Top Bar */
-    header { background-color: #075E54; color: white; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.3); z-index: 50; }
-    .header-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
-    .back-btn { background: none; border: none; color: white; font-size: 22px; cursor: pointer; display: none; padding: 0 4px; }
-    .header-dp { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #25D366; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold; cursor: pointer; flex-shrink: 0; overflow: hidden; }
-    .header-dp img { width: 100%; height: 100%; object-fit: cover; }
-    .header-title-box { display: flex; flex-direction: column; overflow: hidden; }
-    .header-title-box h1 { font-size: 16px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-    .header-title-box p { font-size: 11px; opacity: 0.85; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-    .header-right { display: flex; align-items: center; gap: 8px; position: relative; }
-    .lang-btn, .icon-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .three-dots-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px 6px; }
+    header {
+      background-color: var(--wa-teal);
+      color: white;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      z-index: 50;
+      min-height: 58px;
+    }
 
-    /* Dropdown Menu */
-    .dropdown-menu { position: absolute; top: 44px; right: 8px; background: white; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); min-width: 190px; display: none; flex-direction: column; z-index: 100; overflow: hidden; }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      display: none;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .header-dp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--wa-teal-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1.5px solid rgba(255,255,255,0.3);
+    }
+    .header-dp img { width: 100%; height: 100%; object-fit: cover; }
+
+    .header-title-box {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .header-title-box h1 {
+      font-size: 15.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .header-title-box p {
+      font-size: 11px;
+      opacity: 0.85;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+
+    .header-btn {
+      background: rgba(255,255,255,0.14);
+      border: none;
+      color: white;
+      padding: 6px 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .three-dots-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+
+    /* Dropdown */
+    .dropdown-menu {
+      position: absolute;
+      top: 48px;
+      right: 4px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      min-width: 210px;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
     .dropdown-menu.show { display: flex; }
-    .dropdown-item { padding: 12px 16px; font-size: 14px; color: #111b21; border: none; background: none; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-    .dropdown-item:active { background: #f0f2f5; }
-    .dropdown-item.danger { color: #ea0038; }
+    .dropdown-item {
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--wa-text-primary);
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dropdown-item:active { background: #f5f6f6; }
+    .dropdown-item.danger { color: #d32f2f; }
 
     /* Dashboard */
-    #dashboard-screen { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #fff; }
-    .metrics-bar { background: #f0f2f5; padding: 10px 14px; display: flex; gap: 10px; border-bottom: 1px solid #e0e0e0; }
-    .metric-card { flex: 1; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center; }
-    .metric-card span { font-size: 11px; color: #667781; display: block; }
-    .metric-card strong { font-size: 16px; color: #075E54; }
+    #dashboard-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .metrics-bar {
+      background: #f0f2f5;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .metric-card {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .metric-card span { font-size: 11px; color: var(--wa-text-secondary); display: block; }
+    .metric-card strong { font-size: 17px; color: var(--wa-teal); margin-top: 2px; display: block; }
+
     .vehicle-list { flex: 1; overflow-y: auto; }
-    .vehicle-item { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #f2f2f2; cursor: pointer; }
-    .vehicle-item:active { background-color: #f7f8fa; }
-    .vehicle-info { flex: 1; margin-left: 12px; }
-    .vehicle-info h3 { font-size: 15px; color: #111b21; }
-    .vehicle-info p { font-size: 12px; color: #667781; margin-top: 2px; }
+    .vehicle-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid #f2f4f5;
+      cursor: pointer;
+    }
+    .vehicle-item:active { background-color: #f0f2f5; }
 
-    /* FAB */
-    .fab { position: absolute; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background-color: #25D366; color: white; border: none; font-size: 26px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 40; }
+    .item-dp-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #dfe5e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .item-dp-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* Ledger / Chat Screen */
-    #ledger-screen { flex: 1; display: none; flex-direction: column; background: #efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat; position: relative; }
-    .messages-area { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .bubble { align-self: flex-end; background-color: #d9fdd3; padding: 8px 12px; border-radius: 8px 0px 8px 8px; max-width: 90%; min-width: 220px; box-shadow: 0 1px 1px rgba(0,0,0,0.15); font-size: 13px; position: relative; }
-    .bubble-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 4px; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 2px; }
-    .bubble-key { color: #54656f; font-weight: 500; }
-    .bubble-val { color: #111b21; font-weight: 600; text-align: right; }
-    .bubble-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: #667781; }
+    .vehicle-info { flex: 1; margin-left: 12px; overflow: hidden; }
+    .vehicle-info h3 { font-size: 15px; color: var(--wa-text-primary); font-weight: 600; }
+    .vehicle-info p { font-size: 12px; color: var(--wa-text-secondary); margin-top: 2px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+    .fab {
+      position: absolute;
+      bottom: 22px;
+      right: 20px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background-color: var(--wa-green);
+      color: white;
+      border: none;
+      font-size: 26px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    /* Ledger */
+    #ledger-screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      background: var(--wa-chat-bg) url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble {
+      align-self: flex-end;
+      background-color: var(--wa-bubble-green);
+      padding: 8px 12px;
+      border-radius: 8px 0px 8px 8px;
+      max-width: 88%;
+      min-width: 210px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      font-size: 13px;
+    }
+
+    .bubble-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+      border-bottom: 1px dashed rgba(0,0,0,0.06);
+      padding-bottom: 3px;
+    }
+    .bubble-key { color: #54656f; font-weight: 500; font-size: 12px; }
+    .bubble-val { color: var(--wa-text-primary); font-weight: 600; text-align: right; font-size: 12.5px; }
+
+    .bubble-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 10.5px;
+      color: #667781;
+    }
+
     .bubble-actions { display: flex; gap: 8px; }
-    .bubble-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: #54656f; padding: 2px 4px; border-radius: 3px; }
-    .bubble-btn:hover { background: rgba(0,0,0,0.05); }
+    .bubble-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bubble-btn:hover { background: rgba(0,0,0,0.08); }
 
-    /* Ledger Sticky Bottom */
-    .ledger-bottom { background-color: #f0f2f5; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #e0e0e0; }
-    .totals-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #075E54; background: #fff; padding: 6px 10px; border-radius: 4px; border: 1px solid #e2e8f0; overflow-x: auto; }
-    .action-btn-row { display: flex; gap: 8px; }
-    .btn-green { flex: 1; background-color: #00a884; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .ledger-bottom {
+      background-color: #f0f2f5;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid #e0e0e0;
+      z-index: 20;
+    }
+
+    .totals-row {
+      display: flex;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--wa-teal);
+      background: #fff;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .btn-add-entry {
+      background-color: var(--wa-btn-green);
+      color: white;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
 
     /* Modals */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 200; }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 200;
+    }
     .modal-overlay.show { display: flex; }
-    .modal-card { background: white; border-radius: 10px; padding: 18px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-    .modal-card h2 { font-size: 17px; margin-bottom: 12px; color: #111b21; }
-    .input-field { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 10px; font-size: 14px; outline: none; }
-    .input-field:focus { border-color: #00a884; }
-    .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-    .btn-secondary { background: #f0f2f5; border: none; color: #54656f; font-weight: 600; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
-    .btn-primary { background: #00a884; border: none; color: white; font-weight: 600; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
 
-    /* Full-Screen DP Preview Modal */
-    .dp-fullscreen-modal { position: fixed; inset: 0; background: #0b141a; display: none; flex-direction: column; z-index: 300; }
+    .modal-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 85dvh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .modal-card h2 { font-size: 16px; margin-bottom: 12px; color: var(--wa-text-primary); font-weight: 600; }
+    
+    .input-field {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 7px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    .input-field:focus { border-color: var(--wa-btn-green); }
+
+    .modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+    .btn-secondary {
+      background: #f0f2f5;
+      border: none;
+      color: #54656f;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--wa-btn-green);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* DP Fullscreen */
+    .dp-fullscreen-modal {
+      position: fixed;
+      inset: 0;
+      background: #0b141a;
+      display: none;
+      flex-direction: column;
+      z-index: 300;
+    }
     .dp-fullscreen-modal.show { display: flex; }
-    .dp-fs-header { padding: 14px; display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(0,0,0,0.4); }
-    .dp-fs-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .dp-fs-img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; }
-    .dp-fs-footer { padding: 14px; display: flex; justify-content: space-around; background: rgba(0,0,0,0.6); }
+    .dp-fs-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      background: rgba(0,0,0,0.4);
+    }
+    .dp-fs-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .dp-fs-img { max-width: 100%; max-height: 75dvh; object-fit: contain; border-radius: 8px; }
+    .dp-fs-footer {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(0,0,0,0.6);
+    }
   </style>
 </head>
 <body>
@@ -110,19 +469,19 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="lang-btn" onclick="toggleLanguage()">🌐 <span id="langLabel">EN</span></button>
-      <button class="icon-btn" id="gridConfigBtn" style="display:none;" onclick="openGridConfigModal()">📐 Grid</button>
+      <button class="header-btn" onclick="toggleLanguage()">🌐 <span id="langLabel">EN</span></button>
+      <button class="header-btn" id="gridConfigBtn" style="display:none;" onclick="openGridConfigModal()">📐 <span class="t-grid">Grid</span></button>
       <button class="three-dots-btn" onclick="toggleDropdownMenu(event)">⋮</button>
-      
+
       <div class="dropdown-menu" id="dropdownMenu">
         <div id="dashboardMenuOptions">
           <button class="dropdown-item" onclick="openAddVehicleModal()">➕ <span class="t-addVeh">New Vehicle</span></button>
-          <button class="dropdown-item" onclick="exportAllVehiclesExcel()">📊 <span class="t-exportAll">Export All to Excel</span></button>
+          <button class="dropdown-item" onclick="exportAllVehiclesExcel()">📊 <span class="t-exportAll">Export All (Excel)</span></button>
           <button class="dropdown-item danger" onclick="clearAllAppData()">🗑️ <span class="t-clearAll">Clear All Data</span></button>
         </div>
         <div id="ledgerMenuOptions" style="display:none;">
           <button class="dropdown-item" onclick="openGridConfigModal()">📐 <span class="t-editGrid">Edit Rows & Columns</span></button>
-          <button class="dropdown-item" onclick="triggerDpUpload()">📷 <span class="t-changeDp">Change Vehicle Photo</span></button>
+          <button class="dropdown-item" onclick="triggerDpUpload()">📷 <span class="t-changeDp">Change Photo</span></button>
           <button class="dropdown-item" onclick="exportCurrentVehicleExcel()">📊 <span class="t-exportCurr">Export Vehicle Sheet</span></button>
           <button class="dropdown-item danger" onclick="clearVehicleEntries()">🧹 <span class="t-clearEntries">Clear Entries</span></button>
           <button class="dropdown-item danger" onclick="deleteCurrentVehicle()">🗑️ <span class="t-deleteVeh">Delete Vehicle</span></button>
@@ -131,7 +490,7 @@
     </div>
   </header>
 
-  <!-- Dashboard -->
+  <!-- Screen 1: Dashboard -->
   <div id="dashboard-screen">
     <div class="metrics-bar">
       <div class="metric-card">
@@ -147,24 +506,25 @@
     <button class="fab" onclick="openAddVehicleModal()">+</button>
   </div>
 
-  <!-- Ledger / Chat -->
+  <!-- Screen 2: Ledger -->
   <div id="ledger-screen">
     <div class="messages-area" id="messagesContainer"></div>
     <div class="ledger-bottom">
-      <div class="totals-row" id="totalsRow">No numeric columns</div>
-      <div class="action-btn-row">
-        <button class="btn-green" onclick="openAddEntryModal()">➕ <span class="t-addEntry">Add Entry</span></button>
-      </div>
+      <div class="totals-row" id="totalsRow">Totals: -</div>
+      <button class="btn-add-entry" onclick="openAddEntryModal()">➕ <span class="t-addEntry">Add Entry</span></button>
     </div>
   </div>
 
-  <!-- Add Vehicle Modal -->
+  <!-- Modal: Add Vehicle -->
   <div class="modal-overlay" id="addVehicleModal">
     <div class="modal-card">
       <h2 class="t-addVeh">Add Vehicle</h2>
+      <label style="font-size:12px; color:var(--wa-text-secondary); margin-bottom:4px; display:block;">Vehicle Reg No.</label>
       <input type="text" id="newRegInput" class="input-field" placeholder="e.g. KA-22-1833" style="text-transform:uppercase;">
-      <p style="font-size:12px; color:#667781; margin-bottom:6px;">Upload Photo (Optional):</p>
+      
+      <label style="font-size:12px; color:var(--wa-text-secondary); margin-bottom:4px; display:block;">Photo (Auto-compressed):</label>
       <input type="file" id="newDpInput" class="input-field" accept="image/*">
+      
       <div class="modal-btns">
         <button class="btn-secondary" onclick="closeModal('addVehicleModal')">Cancel</button>
         <button class="btn-primary" onclick="saveNewVehicle()">Save</button>
@@ -172,17 +532,17 @@
     </div>
   </div>
 
-  <!-- Grid Configuration Modal -->
+  <!-- Modal: Grid Configuration -->
   <div class="modal-overlay" id="gridConfigModal">
     <div class="modal-card">
       <h2 id="gridModalTitle">Configure Rows & Columns</h2>
-      <p style="font-size:12px; color:#667781; margin-bottom:4px;" class="t-numCols">Number of Columns:</p>
-      <input type="number" id="numColsInput" class="input-field" min="0" placeholder="0" oninput="renderColumnNameInputs()">
-      
-      <p style="font-size:12px; color:#667781; margin-bottom:4px;" class="t-numRows">Number of Rows (Capacity):</p>
-      <input type="number" id="numRowsInput" class="input-field" min="0" placeholder="0">
+      <label class="t-numCols" style="font-size:12px; color:var(--wa-text-secondary); margin-bottom:4px; display:block;">Number of Columns:</label>
+      <input type="number" id="numColsInput" class="input-field" min="1" max="15" placeholder="e.g. 4" oninput="renderColumnNameInputs()">
 
-      <div id="columnInputsContainer" style="margin-top:10px;"></div>
+      <label class="t-numRows" style="font-size:12px; color:var(--wa-text-secondary); margin-bottom:4px; display:block;">Number of Rows (Limit):</label>
+      <input type="number" id="numRowsInput" class="input-field" min="1" placeholder="e.g. 30">
+
+      <div id="columnInputsContainer"></div>
 
       <div class="modal-btns">
         <button class="btn-secondary" onclick="closeModal('gridConfigModal')">Cancel</button>
@@ -191,7 +551,7 @@
     </div>
   </div>
 
-  <!-- Entry Modal -->
+  <!-- Modal: Entry Form -->
   <div class="modal-overlay" id="entryModal">
     <div class="modal-card">
       <h2 id="entryModalTitle">Add Entry</h2>
@@ -203,14 +563,14 @@
     </div>
   </div>
 
-  <!-- DP Preview Modal -->
+  <!-- Modal: DP Full Screen -->
   <div class="dp-fullscreen-modal" id="dpModal">
     <div class="dp-fs-header">
-      <h3 id="dpModalTitle">Vehicle DP</h3>
-      <button class="icon-btn" onclick="closeDpModal()">✕</button>
+      <h3 id="dpModalTitle">Vehicle Photo</h3>
+      <button class="header-btn" onclick="closeDpModal()">✕</button>
     </div>
     <div class="dp-fs-body">
-      <img id="dpFullImg" class="dp-fs-img" src="" alt="DP Preview">
+      <img id="dpFullImg" class="dp-fs-img" src="" alt="Vehicle Photo">
     </div>
     <div class="dp-fs-footer">
       <button class="btn-primary" onclick="triggerDpUpload()">📷 <span class="t-changeDp">Change Photo</span></button>
@@ -222,11 +582,15 @@
 </div>
 
 <script>
-  // Automatic Inline Service Worker Registration for PWA Standalone Mode
+  // Self-contained Service Worker registered via Blob URL
   if ('serviceWorker' in navigator) {
-    const swBlob = new Blob(["self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));"], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl).catch(() => {});
+    const swCode = `
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('activate', e => clients.claim());
+      self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
   }
 
   const I18N = {
@@ -246,7 +610,8 @@
       addEntry: "Add Entry",
       editEntry: "Edit Entry",
       numCols: "Number of Columns:",
-      numRows: "Number of Rows:",
+      numRows: "Number of Rows (Limit):",
+      grid: "Grid",
       defaults: ["Date", "Diesel Litres", "Total Amount (₹)", "Driver Bata"]
     },
     kn: {
@@ -254,7 +619,7 @@
       subtitle: "ವಾಹನದ ಖರ್ಚು ಲೆಕ್ಕಪತ್ರ",
       totalVeh: "ಒಟ್ಟು ವಾಹನಗಳು",
       totalEntries: "ಒಟ್ಟು ನಮೂದುಗಳು",
-      addVeh: "ಹೊಸ ವಾಹನ ಸೇರಿಸಿ",
+      addVeh: "ಹೊಸ ವಾಹನ",
       exportAll: "ಎಕ್ಸೆಲ್ ಡೌನ್‌ಲೋಡ್",
       clearAll: "ಎಲ್ಲಾ ಡೇಟಾ ಅಳಿಸಿ",
       editGrid: "ಸಾಲು & ಕಾಲಮ್ ತಿದ್ದುಪಡಿ",
@@ -265,7 +630,8 @@
       addEntry: "ಹೊಸ ಖರ್ಚು ಸೇರಿಸಿ",
       editEntry: "ಖರ್ಚು ತಿದ್ದುಪಡಿ",
       numCols: "ಕಾಲಮ್‌ಗಳ ಸಂಖ್ಯೆ:",
-      numRows: "ಸಾಲುಗಳ ಸಂಖ್ಯೆ:",
+      numRows: "ಸಾಲುಗಳ ಸಂಖ್ಯೆ (ಮಿತಿ):",
+      grid: "ಗ್ರಿಡ್",
       defaults: ["ದಿನಾಂಕ", "ಡೀಸೆಲ್ (ಲೀಟರ್)", "ಒಟ್ಟು ಮೊತ್ತ (₹)", "ಡ್ರೈವರ್ ಬಟಾ"]
     },
     hi: {
@@ -273,7 +639,7 @@
       subtitle: "गाड़ी अनुसार खर्च का हिसाब",
       totalVeh: "कुल गाड़ियाँ",
       totalEntries: "कुल एंट्रियां",
-      addVeh: "नई गाड़ी जोड़ें",
+      addVeh: "नई गाड़ी",
       exportAll: "एक्सेल डाउनलोड",
       clearAll: "सभी डेटा हटाएं",
       editGrid: "पंक्तियाँ व कॉलम एडिट",
@@ -284,22 +650,81 @@
       addEntry: "नया खर्च जोड़ें",
       editEntry: "खर्च एडिट करें",
       numCols: "कॉलम की संख्या:",
-      numRows: "पंक्तियों की संख्या:",
+      numRows: "पंक्तियों की संख्या (लिमिट):",
+      grid: "ग्रिड",
       defaults: ["तारीख", "डीजल (लीटर)", "कुल राशि (₹)", "ड्राइवर भत्ता"]
     }
   };
 
-  let currentLang = localStorage.getItem('v_lang') || 'en';
-  let vehicles = JSON.parse(localStorage.getItem('v_data_v2')) || [
-    { id: 'v1', regNo: 'KA-22-1833', dp: '', rowCount: 10, columns: ['Date', 'Diesel Litres', 'Total Amount (₹)', 'Driver Bata'], isConfigured: true, entries: [] }
+  let currentLang = localStorage.getItem('v_lang_v6') || 'en';
+  let vehicles = JSON.parse(localStorage.getItem('v_data_v6')) || [
+    {
+      id: 'v1',
+      regNo: 'KA-22-1833',
+      dp: '',
+      rowCount: 30,
+      columns: [
+        { id: 'c1', name: 'Date' },
+        { id: 'c2', name: 'Diesel Litres' },
+        { id: 'c3', name: 'Total Amount (₹)' },
+        { id: 'c4', name: 'Driver Bata' }
+      ],
+      isConfigured: true,
+      entries: []
+    }
   ];
+
   let activeVehicleId = null;
   let editingEntryId = null;
 
   function persist() {
-    localStorage.setItem('v_data_v2', JSON.stringify(vehicles));
-    localStorage.setItem('v_lang', currentLang);
+    try {
+      localStorage.setItem('v_data_v6', JSON.stringify(vehicles));
+      localStorage.setItem('v_lang_v6', currentLang);
+    } catch (e) {
+      alert("Storage full! Please export to Excel.");
+    }
     updateMetrics();
+  }
+
+  function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', 0.65));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function cleanNumber(val) {
+    if (val === null || val === undefined) return 0;
+    const cleaned = String(val).replace(/[^0-9.-]+/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
   }
 
   function toggleLanguage() {
@@ -324,6 +749,7 @@
     document.querySelectorAll('.t-addEntry').forEach(e => e.innerText = t.addEntry);
     document.querySelectorAll('.t-numCols').forEach(e => e.innerText = t.numCols);
     document.querySelectorAll('.t-numRows').forEach(e => e.innerText = t.numRows);
+    document.querySelectorAll('.t-grid').forEach(e => e.innerText = t.grid);
 
     if (!activeVehicleId) {
       document.getElementById('topTitle').innerText = t.appTitle;
@@ -340,22 +766,25 @@
   function renderVehicleList() {
     const container = document.getElementById('vehicleListContainer');
     container.innerHTML = '';
-    
+
+    if (vehicles.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:40px 20px; color:#667781; font-size:13.5px;">No vehicles added yet.<br>Tap + to register a vehicle.</div>`;
+      updateMetrics();
+      return;
+    }
+
     vehicles.forEach(v => {
       const div = document.createElement('div');
       div.className = 'vehicle-item';
       div.onclick = () => onVehicleClick(v.id);
 
-      const dpHtml = v.dp 
-        ? `<img src="${v.dp}">` 
-        : `🚛`;
-
+      const dpHtml = v.dp ? `<img src="${v.dp}">` : `🚛`;
       const subText = v.isConfigured 
-        ? `${v.columns.length} Cols • ${v.rowCount || 0} Rows (${v.entries.length} entries)`
-        : 'Tap to configure rows and columns';
+        ? `${v.columns.length} Cols • Limit: ${v.rowCount || 0} (${v.entries.length} logged)`
+        : 'Tap to configure grid';
 
       div.innerHTML = `
-        <div class="header-dp" onclick="event.stopPropagation(); showDpFullScreenFor('${v.id}')">${dpHtml}</div>
+        <div class="item-dp-wrap" onclick="event.stopPropagation(); showDpFullScreenFor('${v.id}')">${dpHtml}</div>
         <div class="vehicle-info">
           <h3>${v.regNo}</h3>
           <p>${subText}</p>
@@ -378,14 +807,14 @@
 
   function openGridConfigModal() {
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
-    document.getElementById('gridModalTitle').innerText = vehicle ? `Setup ${vehicle.regNo}` : 'Grid Setup';
-    
+    document.getElementById('gridModalTitle').innerText = vehicle ? `Setup: ${vehicle.regNo}` : 'Grid Setup';
+
     const colInput = document.getElementById('numColsInput');
     const rowInput = document.getElementById('numRowsInput');
-    
-    colInput.value = (vehicle && vehicle.columns.length > 0) ? vehicle.columns.length : '';
-    rowInput.value = (vehicle && vehicle.rowCount) ? vehicle.rowCount : '';
-    
+
+    colInput.value = (vehicle && vehicle.columns.length > 0) ? vehicle.columns.length : 4;
+    rowInput.value = (vehicle && vehicle.rowCount) ? vehicle.rowCount : 30;
+
     renderColumnNameInputs();
     openModal('gridConfigModal');
   }
@@ -393,8 +822,8 @@
   function renderColumnNameInputs() {
     const colCount = parseInt(document.getElementById('numColsInput').value) || 0;
     const container = document.getElementById('columnInputsContainer');
-    container.innerHTML = '';
-    
+    container.innerHTML = '<label style="font-size:12px; color:var(--wa-text-secondary); margin:8px 0 4px 0; display:block;">Column Names:</label>';
+
     if (colCount <= 0) return;
 
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
@@ -405,7 +834,7 @@
       const input = document.createElement('input');
       input.className = 'input-field';
       input.placeholder = `Column ${i + 1} Name`;
-      input.value = existingCols[i] || defaults[i] || `Field ${i + 1}`;
+      input.value = (existingCols[i] ? existingCols[i].name : '') || defaults[i] || `Field ${i + 1}`;
       input.dataset.colIndex = i;
       container.appendChild(input);
     }
@@ -414,17 +843,26 @@
   function saveGridConfiguration() {
     const colCount = parseInt(document.getElementById('numColsInput').value) || 0;
     const rowCount = parseInt(document.getElementById('numRowsInput').value) || 0;
-    
+
     if (colCount <= 0 || rowCount <= 0) {
-      alert('Please enter a valid number greater than 0 for both rows and columns.');
+      alert('Please enter a valid number greater than 0 for both columns and rows.');
       return;
     }
 
     const inputs = document.querySelectorAll('#columnInputsContainer input');
-    const cols = Array.from(inputs).map(inp => inp.value.trim()).filter(v => v !== '');
-
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
-    vehicle.columns = cols;
+    const updatedCols = [];
+
+    Array.from(inputs).forEach((inp, idx) => {
+      const name = inp.value.trim() || `Field ${idx + 1}`;
+      const existingCol = vehicle.columns[idx];
+      updatedCols.push({
+        id: existingCol ? existingCol.id : 'col_' + Date.now() + '_' + idx,
+        name: name
+      });
+    });
+
+    vehicle.columns = updatedCols;
     vehicle.rowCount = rowCount;
     vehicle.isConfigured = true;
     persist();
@@ -437,13 +875,13 @@
     document.getElementById('dashboard-screen').style.display = 'none';
     document.getElementById('ledger-screen').style.display = 'flex';
     document.getElementById('backBtn').style.display = 'block';
-    document.getElementById('gridConfigBtn').style.display = 'block';
+    document.getElementById('gridConfigBtn').style.display = 'flex';
     document.getElementById('dashboardMenuOptions').style.display = 'none';
     document.getElementById('ledgerMenuOptions').style.display = 'block';
 
     document.getElementById('topTitle').innerText = vehicle.regNo;
-    document.getElementById('topSubtitle').innerText = `${vehicle.columns.join(' • ')}`;
-    
+    document.getElementById('topSubtitle').innerText = vehicle.columns.map(c => c.name).join(' • ');
+
     const topDp = document.getElementById('topDp');
     topDp.innerHTML = vehicle.dp ? `<img src="${vehicle.dp}">` : '🚛';
 
@@ -458,7 +896,7 @@
     document.getElementById('gridConfigBtn').style.display = 'none';
     document.getElementById('dashboardMenuOptions').style.display = 'block';
     document.getElementById('ledgerMenuOptions').style.display = 'none';
-    
+
     document.getElementById('topDp').innerHTML = '🚛';
     applyLanguage();
     renderVehicleList();
@@ -467,9 +905,13 @@
   function renderMessages(vehicle) {
     const container = document.getElementById('messagesContainer');
     container.innerHTML = '';
-    
+
     const numericTotals = {};
-    vehicle.columns.forEach(col => numericTotals[col] = 0);
+    vehicle.columns.forEach(col => numericTotals[col.id] = 0);
+
+    if (vehicle.entries.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:30px 20px; color:#667781; font-size:13px;">No expense records logged yet.<br>Tap "Add Entry" below.</div>`;
+    }
 
     vehicle.entries.forEach(entry => {
       const bubble = document.createElement('div');
@@ -477,24 +919,23 @@
 
       let rowsHtml = '';
       vehicle.columns.forEach(col => {
-        const val = entry.data[col] || '-';
+        const val = entry.data[col.id] || '-';
         rowsHtml += `
           <div class="bubble-row">
-            <span class="bubble-key">${col}:</span>
+            <span class="bubble-key">${col.name}:</span>
             <span class="bubble-val">${val}</span>
           </div>
         `;
-        const num = parseFloat(val);
-        if (!isNaN(num)) numericTotals[col] += num;
+        numericTotals[col.id] += cleanNumber(val);
       });
 
       bubble.innerHTML = `
         ${rowsHtml}
         <div class="bubble-bottom">
-          <span>${entry.time || ''} ✓✓</span>
+          <span>${entry.time || ''} <span style="color:#53bdeb; font-weight:bold;">✓✓</span></span>
           <div class="bubble-actions">
-            <button class="bubble-btn" onclick="openEditEntryModal('${entry.id}')">✏️</button>
-            <button class="bubble-btn" onclick="deleteEntry('${entry.id}')">🗑️</button>
+            <button class="bubble-btn" title="Edit this entry" onclick="openEditEntryModal('${entry.id}')">✏️</button>
+            <button class="bubble-btn" title="Delete this entry" onclick="deleteEntry('${entry.id}')">🗑️</button>
           </div>
         </div>
       `;
@@ -503,9 +944,14 @@
 
     const totalsArr = [];
     vehicle.columns.forEach(col => {
-      if (numericTotals[col] > 0) totalsArr.push(`${col}: ${numericTotals[col].toFixed(1)}`);
+      if (numericTotals[col.id] > 0) {
+        totalsArr.push(`${col.name}: ${numericTotals[col.id].toLocaleString('en-IN')}`);
+      }
     });
-    document.getElementById('totalsRow').innerText = totalsArr.length > 0 ? `Totals: ${totalsArr.join(' | ')}` : 'Logged: ' + vehicle.entries.length + '/' + vehicle.rowCount;
+
+    document.getElementById('totalsRow').innerText = totalsArr.length > 0 
+      ? `Totals: ${totalsArr.join(' | ')}` 
+      : `Logged: ${vehicle.entries.length}/${vehicle.rowCount} entries`;
 
     container.scrollTop = container.scrollHeight;
   }
@@ -523,10 +969,11 @@
   }
 
   function openEditEntryModal(entryId) {
-    editingEntryId = entryId;
+    editingEntryId = String(entryId);
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
-    const entry = vehicle.entries.find(e => e.id === entryId);
-    
+    const entry = vehicle.entries.find(e => String(e.id) === String(entryId));
+    if (!entry) return;
+
     document.getElementById('entryModalTitle').innerText = I18N[currentLang].editEntry;
     buildEntryForm(entry.data);
     openModal('entryModal');
@@ -538,16 +985,28 @@
     container.innerHTML = '';
 
     vehicle.columns.forEach(col => {
+      const label = document.createElement('label');
+      label.style.fontSize = '12px';
+      label.style.color = 'var(--wa-text-secondary)';
+      label.innerText = col.name;
+      container.appendChild(label);
+
       const input = document.createElement('input');
       input.className = 'input-field';
-      input.id = `input_entry_${col}`;
-      input.placeholder = col;
-      if (col.toLowerCase().includes('date')) {
+      input.id = `input_entry_${col.id}`;
+      input.placeholder = col.name;
+
+      const n = col.name.toLowerCase();
+      if (n.includes('date') || col.name.includes('ದಿನಾಂಕ') || col.name.includes('तारीख')) {
         input.type = 'date';
-        input.value = data[col] || new Date().toISOString().split('T')[0];
+        input.value = data[col.id] || new Date().toISOString().split('T')[0];
+      } else if (n.includes('cost') || n.includes('amount') || n.includes('litre') || n.includes('bata') || n.includes('price') || col.name.includes('₹') || col.name.includes('ಲೀಟರ್') || col.name.includes('लीटर')) {
+        input.type = 'number';
+        input.step = 'any';
+        input.value = (data[col.id] !== undefined && data[col.id] !== '-') ? data[col.id] : '';
       } else {
-        input.type = (col.toLowerCase().includes('cost') || col.toLowerCase().includes('amount') || col.toLowerCase().includes('litre') || col.toLowerCase().includes('bata')) ? 'number' : 'text';
-        input.value = data[col] || '';
+        input.type = 'text';
+        input.value = (data[col.id] !== undefined && data[col.id] !== '-') ? data[col.id] : '';
       }
       container.appendChild(input);
     });
@@ -556,22 +1015,30 @@
   function saveEntryForm() {
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
     const dataObj = {};
-    
+
     vehicle.columns.forEach(col => {
-      const val = document.getElementById(`input_entry_${col}`).value.trim();
-      dataObj[col] = val || '-';
+      const val = document.getElementById(`input_entry_${col.id}`).value.trim();
+      dataObj[col.id] = val || '-';
     });
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    if (editingEntryId) {
-      const idx = vehicle.entries.findIndex(e => e.id === editingEntryId);
-      if (idx !== -1) vehicle.entries[idx].data = dataObj;
+    if (editingEntryId !== null) {
+      const targetIndex = vehicle.entries.findIndex(e => String(e.id) === String(editingEntryId));
+      if (targetIndex !== -1) {
+        vehicle.entries[targetIndex].data = dataObj;
+        vehicle.entries[targetIndex].time = timeStr + ' (edited)';
+      }
     } else {
-      vehicle.entries.push({ id: Date.now().toString(), data: dataObj, time: timeStr });
+      vehicle.entries.push({ 
+        id: 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
+        data: dataObj, 
+        time: timeStr 
+      });
     }
 
+    editingEntryId = null;
     persist();
     closeModal('entryModal');
     renderMessages(vehicle);
@@ -580,7 +1047,7 @@
   function deleteEntry(entryId) {
     if (!confirm('Delete this entry?')) return;
     const vehicle = vehicles.find(v => v.id === activeVehicleId);
-    vehicle.entries = vehicle.entries.filter(e => e.id !== entryId);
+    vehicle.entries = vehicle.entries.filter(e => String(e.id) !== String(entryId));
     persist();
     renderMessages(vehicle);
   }
@@ -593,20 +1060,28 @@
 
   function saveNewVehicle() {
     const regNo = document.getElementById('newRegInput').value.trim().toUpperCase();
-    if (!regNo) return;
-    
+    if (!regNo) {
+      alert('Please enter a vehicle registration number.');
+      return;
+    }
+
     const file = document.getElementById('newDpInput').files[0];
+    const defaultCols = [
+      { id: 'c1', name: 'Date' },
+      { id: 'c2', name: 'Diesel Litres' },
+      { id: 'c3', name: 'Total Amount (₹)' },
+      { id: 'c4', name: 'Driver Bata' }
+    ];
+
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        vehicles.push({ id: Date.now().toString(), regNo, dp: e.target.result, rowCount: 10, columns: [], isConfigured: false, entries: [] });
+      compressImage(file, (base64Thumb) => {
+        vehicles.push({ id: 'v_' + Date.now(), regNo, dp: base64Thumb, rowCount: 30, columns: defaultCols, isConfigured: true, entries: [] });
         persist();
         closeModal('addVehicleModal');
         renderVehicleList();
-      };
-      reader.readAsDataURL(file);
+      });
     } else {
-      vehicles.push({ id: Date.now().toString(), regNo, dp: '', rowCount: 10, columns: [], isConfigured: false, entries: [] });
+      vehicles.push({ id: 'v_' + Date.now(), regNo, dp: '', rowCount: 30, columns: defaultCols, isConfigured: true, entries: [] });
       persist();
       closeModal('addVehicleModal');
       renderVehicleList();
@@ -622,7 +1097,7 @@
     if (!vehicle) return;
     activeVehicleId = id;
     document.getElementById('dpModalTitle').innerText = vehicle.regNo;
-    document.getElementById('dpFullImg').src = vehicle.dp || 'https://via.placeholder.com/400x400/075E54/FFFFFF?text=' + vehicle.regNo;
+    document.getElementById('dpFullImg').src = vehicle.dp || 'https://via.placeholder.com/400x400/075E54/FFFFFF?text=' + encodeURIComponent(vehicle.regNo);
     document.getElementById('dpModal').classList.add('show');
   }
 
@@ -638,16 +1113,14 @@
     const file = event.target.files[0];
     if (!file || !activeVehicleId) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    compressImage(file, (base64Thumb) => {
       const vehicle = vehicles.find(v => v.id === activeVehicleId);
-      vehicle.dp = e.target.result;
+      vehicle.dp = base64Thumb;
       persist();
       document.getElementById('dpFullImg').src = vehicle.dp;
       document.getElementById('topDp').innerHTML = `<img src="${vehicle.dp}">`;
       renderVehicleList();
-    };
-    reader.readAsDataURL(file);
+    });
   }
 
   function removeVehicleDp() {
@@ -655,10 +1128,14 @@
     if (vehicle) {
       vehicle.dp = '';
       persist();
-      document.getElementById('dpFullImg').src = 'https://via.placeholder.com/400x400/075E54/FFFFFF?text=' + vehicle.regNo;
+      document.getElementById('dpFullImg').src = 'https://via.placeholder.com/400x400/075E54/FFFFFF?text=' + encodeURIComponent(vehicle.regNo);
       document.getElementById('topDp').innerHTML = '🚛';
       renderVehicleList();
     }
+  }
+
+  function sanitizeSheetName(name) {
+    return name.replace(/[\\/?*\[\]:]/g, '_').substring(0, 30);
   }
 
   function exportCurrentVehicleExcel() {
@@ -668,24 +1145,41 @@
       return;
     }
 
-    const data = vehicle.entries.map(e => e.data);
-    const ws = XLSX.utils.json_to_sheet(data);
+    const exportRows = vehicle.entries.map(e => {
+      const row = {};
+      vehicle.columns.forEach(col => {
+        row[col.name] = e.data[col.id] || '-';
+      });
+      return row;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportRows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, vehicle.regNo.replace(/[^a-zA-Z0-9]/g, '_'));
-    XLSX.writeFile(wb, `${vehicle.regNo}_Expense_Ledger.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(vehicle.regNo));
+    XLSX.writeFile(wb, `${sanitizeSheetName(vehicle.regNo)}_Expenses.xlsx`);
   }
 
   function exportAllVehiclesExcel() {
-    if (vehicles.length === 0) return;
+    if (vehicles.length === 0) {
+      alert('No vehicles to export.');
+      return;
+    }
     const wb = XLSX.utils.book_new();
 
     vehicles.forEach(v => {
-      const data = v.entries.map(e => e.data);
-      const ws = XLSX.utils.json_to_sheet(data.length > 0 ? data : [{ Info: 'No entries' }]);
-      XLSX.utils.book_append_sheet(wb, ws, v.regNo.substring(0, 30));
+      const exportRows = v.entries.map(e => {
+        const row = {};
+        v.columns.forEach(col => {
+          row[col.name] = e.data[col.id] || '-';
+        });
+        return row;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportRows.length > 0 ? exportRows : [{ Info: 'No entries logged' }]);
+      XLSX.utils.book_append_sheet(wb, ws, sanitizeSheetName(v.regNo));
     });
 
-    XLSX.writeFile(wb, `All_Vehicles_Ledger_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `All_Vehicles_Expenses_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
   function clearVehicleEntries() {
@@ -697,15 +1191,15 @@
   }
 
   function deleteCurrentVehicle() {
-    if (!confirm('Delete this entire vehicle record?')) return;
+    if (!confirm('Permanently delete this vehicle and all its data?')) return;
     vehicles = vehicles.filter(v => v.id !== activeVehicleId);
     persist();
     showDashboard();
   }
 
   function clearAllAppData() {
-    if (!confirm('Are you sure you want to reset all vehicle data?')) return;
-    localStorage.removeItem('v_data_v2');
+    if (!confirm('Are you sure you want to reset all vehicle data? This cannot be undone.')) return;
+    localStorage.removeItem('v_data_v6');
     vehicles = [];
     persist();
     showDashboard();
